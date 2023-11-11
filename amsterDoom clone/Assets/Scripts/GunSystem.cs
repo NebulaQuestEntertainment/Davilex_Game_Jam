@@ -1,33 +1,31 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
-using UnityEngine.UIElements;
 using TMPro;
 
 public class GunSystem : MonoBehaviour
 {
-    public Rigidbody rb;
+    //Gun stats
     public int damage;
     public float timeBetweenShooting, spread, range, reloadTime, timeBetweenShots;
     public int magazineSize, bulletsPerTap;
     public bool allowButtonHold;
     int bulletsLeft, bulletsShot;
 
+    //bools 
     bool shooting, readyToShoot, reloading;
 
+    //Reference
     public Camera fpsCam;
     public Transform attackPoint;
     public RaycastHit rayHit;
     public LayerMask whatIsEnemy;
 
+    //Graphics
     public GameObject muzzleFlash, bulletHoleGraphic;
-    public CameraShake camShake;
+    public CamShake camShake;
     public float camShakeMagnitude, camShakeDuration;
     public TextMeshProUGUI text;
 
-    void Awake()
+    private void Awake()
     {
         bulletsLeft = magazineSize;
         readyToShoot = true;
@@ -35,6 +33,8 @@ public class GunSystem : MonoBehaviour
     private void Update()
     {
         MyInput();
+
+        //SetText
         text.SetText(bulletsLeft + " / " + magazineSize);
     }
     private void MyInput()
@@ -43,41 +43,37 @@ public class GunSystem : MonoBehaviour
         else shooting = Input.GetKeyDown(KeyCode.Mouse0);
 
         if (Input.GetKeyDown(KeyCode.R) && bulletsLeft < magazineSize && !reloading) Reload();
-    
-        if (readyToShoot && shooting && !reloading && bulletsLeft > 0)
-        {
+
+        //Shoot
+        if (readyToShoot && shooting && !reloading && bulletsLeft > 0){
             bulletsShot = bulletsPerTap;
             Shoot();
         }
     }
-
     private void Shoot()
     {
         readyToShoot = false;
 
-        //spread
+        //Spread
         float x = Random.Range(-spread, spread);
         float y = Random.Range(-spread, spread);
 
-        float newSpread = spread;
-        if (rb.velocity.magnitude > 0)
-            spread = newSpread * 1.5f;
-        else spread = newSpread;
-
-        //calculate direction with spread
+        //Calculate Direction with Spread
         Vector3 direction = fpsCam.transform.forward + new Vector3(x, y, 0);
 
-        //raycast
+        //RayCast
         if (Physics.Raycast(fpsCam.transform.position, direction, out rayHit, range, whatIsEnemy))
         {
             Debug.Log(rayHit.collider.name);
 
-            //if (rayHit.collider.CompareTag("Enemy"))
-            //    rayHit.collider.GetComponent<ShootingAi>().TakeDamage(damage);
+            if (rayHit.collider.CompareTag("Enemy"))
+                rayHit.collider.GetComponent<ShootingAi>().TakeDamage(damage);
         }
 
-        camShake.Shake(camShakeDuration, camShakeDuration);
+        //ShakeCamera
+        camShake.Shake(camShakeDuration, camShakeMagnitude);
 
+        //Graphics
         Instantiate(bulletHoleGraphic, rayHit.point, Quaternion.Euler(0, 180, 0));
         Instantiate(muzzleFlash, attackPoint.position, Quaternion.identity);
 
@@ -86,20 +82,19 @@ public class GunSystem : MonoBehaviour
 
         Invoke("ResetShot", timeBetweenShooting);
 
-        if (bulletsShot > 0 && bulletsLeft > 0)
+        if(bulletsShot > 0 && bulletsLeft > 0)
         Invoke("Shoot", timeBetweenShots);
     }
     private void ResetShot()
     {
         readyToShoot = true;
     }
-
     private void Reload()
     {
         reloading = true;
         Invoke("ReloadFinished", reloadTime);
     }
-    private void  ReloadFinished() 
+    private void ReloadFinished()
     {
         bulletsLeft = magazineSize;
         reloading = false;
