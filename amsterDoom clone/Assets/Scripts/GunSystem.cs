@@ -60,6 +60,8 @@ public class GunSystem : MonoBehaviour
 
         // Calculate Direction with Spread
         Vector3 direction = fpsCam.transform.forward;
+
+        // Apply spread in both horizontal and vertical directions independently
         direction.x += Random.Range(-spread, spread);
         direction.y += Random.Range(-spread, spread);
 
@@ -68,13 +70,34 @@ public class GunSystem : MonoBehaviour
 
         // RayCast
         if (Physics.Raycast(fpsCam.transform.position, direction, out rayHit, range, whatIsEnemy))
-        {
+        {    
             Debug.Log(rayHit.collider.name);
 
             // Uncomment and adapt the damage logic based on your game's requirements
             // if (rayHit.collider.CompareTag("Enemy"))
             //     rayHit.collider.GetComponent<ShootingAi>().TakeDamage(damage);
         }
+
+        // ShakeCamera
+        camShake.Shake(camShakeDuration, camShakeMagnitude);
+
+        // Graphics
+        if (rayHit.collider != null)
+        {
+            Instantiate(bulletHoleGraphic, rayHit.point, Quaternion.FromToRotation(Vector3.up, rayHit.normal));
+        }
+
+        Instantiate(muzzleFlash, attackPoint.position, Quaternion.identity);
+
+        bulletsLeft--;
+        bulletsShot--;
+
+        Invoke("ResetShot", timeBetweenShooting);
+
+        if (bulletsShot > 0 && bulletsLeft > 0)
+            Invoke("Shoot", timeBetweenShots);
+    }
+
 
         // ShakeCamera
         camShake.Shake(camShakeDuration, camShakeMagnitude);
