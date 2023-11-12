@@ -4,9 +4,11 @@ using TMPro;
 public class GunSystem : MonoBehaviour
 {
     //Gun stats
+    public Animator anim;
     public int damage;
     public float timeBetweenShooting, spread, range, reloadTime, timeBetweenShots;
-    public int magazineSize, bulletsPerTap;
+    public int magazineSize, bulletsPerTap, maxAmo;
+    private int amo;
     public bool allowButtonHold;
     int bulletsLeft, bulletsShot;
 
@@ -20,14 +22,15 @@ public class GunSystem : MonoBehaviour
     public LayerMask whatIsEnemy;
 
     //Graphics
-    public GameObject muzzleFlash, bulletHoleGraphic;
-    public CamShake camShake;
+    //public GameObject muzzleFlash, bulletHoleGraphic;
+    public CameraShake camShake;
     public float camShakeMagnitude, camShakeDuration;
-    public TextMeshProUGUI text;
+    public TextMeshProUGUI Amotxt;
 
     private void Awake()
     {
         bulletsLeft = magazineSize;
+        amo = maxAmo;
         readyToShoot = true;
     }
     private void Update()
@@ -35,17 +38,37 @@ public class GunSystem : MonoBehaviour
         MyInput();
 
         //SetText
-        text.SetText(bulletsLeft + " / " + magazineSize);
+        if(!reloading)
+            Amotxt.SetText(bulletsLeft + " / " + amo);
+
+        if(amo < 0)
+        {
+            amo = 0;
+        }
+        else if(amo > maxAmo)
+        {
+            amo = maxAmo;
+        }
+
+        if(bulletsLeft < 0)
+        {
+            bulletsLeft = 0;
+        }
+        else if(bulletsLeft > magazineSize)
+        {
+            bulletsLeft = magazineSize;
+        }
     }
     private void MyInput()
     {
         if (allowButtonHold) shooting = Input.GetKey(KeyCode.Mouse0);
         else shooting = Input.GetKeyDown(KeyCode.Mouse0);
 
-        if (Input.GetKeyDown(KeyCode.R) && bulletsLeft < magazineSize && !reloading) Reload();
+        if (Input.GetKeyDown(KeyCode.R) && bulletsLeft < magazineSize && !reloading && amo > 0) Reload();
 
         //Shoot
-        if (readyToShoot && shooting && !reloading && bulletsLeft > 0){
+        if (readyToShoot && shooting && !reloading && bulletsLeft > 0)
+        {
             bulletsShot = bulletsPerTap;
             Shoot();
         }
@@ -66,24 +89,25 @@ public class GunSystem : MonoBehaviour
         {
             Debug.Log(rayHit.collider.name);
 
-            if (rayHit.collider.CompareTag("Enemy"))
-                rayHit.collider.GetComponent<ShootingAi>().TakeDamage(damage);
+            //if (rayHit.collider.CompareTag("Enemy"))
+                rayHit.collider.GetComponent<enemy>().TakeDamage(damage);
         }
 
         //ShakeCamera
         camShake.Shake(camShakeDuration, camShakeMagnitude);
 
         //Graphics
-        Instantiate(bulletHoleGraphic, rayHit.point, Quaternion.Euler(0, 180, 0));
-        Instantiate(muzzleFlash, attackPoint.position, Quaternion.identity);
+        //Instantiate(bulletHoleGraphic, rayHit.point, Quaternion.Euler(0, 180, 0));
+        //Instantiate(muzzleFlash, attackPoint.position, Quaternion.identity);
 
         bulletsLeft--;
         bulletsShot--;
 
+        anim.SetTrigger("her");
         Invoke("ResetShot", timeBetweenShooting);
 
-        if(bulletsShot > 0 && bulletsLeft > 0)
-        Invoke("Shoot", timeBetweenShots);
+        if (bulletsShot > 0 && bulletsLeft > 0)
+            Invoke("Shoot", timeBetweenShots);
     }
     private void ResetShot()
     {
@@ -91,11 +115,34 @@ public class GunSystem : MonoBehaviour
     }
     private void Reload()
     {
+        Amotxt.SetText("......");
         reloading = true;
         Invoke("ReloadFinished", reloadTime);
     }
     private void ReloadFinished()
     {
-        bulletsLeft = magazineSize;
+        if(amo >= magazineSize)
+        {
+            int a = magazineSize - bulletsLeft;
+            amo = amo - a ;
+            bulletsLeft = magazineSize;
+        }
+        else if (amo < magazineSize)
+        {
+            int a = magazineSize - bulletsLeft;
+            int b = 0;
+            if(a > amo)
+            {
+                b = amo;
+            }
+            else if (a < amo)
+            {
+               b = amo - a;
+
+            }
+            amo = amo - b;
+            bulletsLeft = bulletsLeft + b;
+        }
         reloading = false;
     }
+}

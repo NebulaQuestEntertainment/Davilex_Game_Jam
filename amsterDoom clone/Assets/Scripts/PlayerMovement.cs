@@ -3,18 +3,31 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Animations;
+using TMPro;
+using UnityEngine.UI;
 
 public class PlayerMovement : MonoBehaviour
 {
     public Transform playerCam;
     public Transform orientation;
 
+    public float hitTime;
+
+    public TextMeshProUGUI hptext;
+    //public Slider hpbar;
+
     private Rigidbody rb;
+
+    public GameObject o;
 
     private float xRotation;
     public float sensitivity = 50f;
     private float sensMultiplier = 1f;
 
+    public int maxHp;
+    public int Hp;
+
+    public GameObject THI;
     public float moveSpeed = 4500;
     public float maxSpeed = 20;
     public bool grounded;
@@ -46,6 +59,8 @@ public class PlayerMovement : MonoBehaviour
 
     void Start()
     {
+        Hp = maxHp;
+        //hpbar.maxValue = maxHp;
         playerScale = transform.localScale;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -58,10 +73,21 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        hptext.text = "HP " + Hp;
         MyInput();
         Look();
+        hp();
+
+        if(Hp <= 0)
+        {
+            gameover();
+        }
     }
 
+    public void hp()
+    {
+        //hpbar.value = Hp;
+    }
     private void MyInput()
     {
         x = Input.GetAxisRaw("Horizontal");
@@ -107,7 +133,7 @@ public class PlayerMovement : MonoBehaviour
 
         CounterMovement(x, y, mag);
 
-        if (readyToJump && jumping) Jump();
+        //if (readyToJump && jumping) Jump();
 
         float maxSpeed = this.maxSpeed;
 
@@ -136,7 +162,7 @@ public class PlayerMovement : MonoBehaviour
         rb.AddForce(orientation.transform.right * x * moveSpeed * Time.deltaTime * multiplier);
     }
 
-    private void Jump()
+   /* private void Jump()
     {
         if (grounded && readyToJump)
         {
@@ -153,8 +179,18 @@ public class PlayerMovement : MonoBehaviour
 
             Invoke(nameof(ResetJump), jumpCooldown);
         }
+    }*/
+
+    public void TakeDamage(int damage)
+    {
+        Hp = Hp - damage;
     }
 
+    void gameover()
+    {
+        o.SetActive(true);
+        Destroy(THI);
+    }
     private void ResetJump()
     {
         readyToJump = true;
