@@ -30,7 +30,7 @@ public class enemy : MonoBehaviour
             nextShotsTime = Time.time + timeBetweenShots;
         }
 
-        if (Hp <= 0)
+        if (Hp <= 0 && !dead)
         {
             dead = true;
             anim.SetBool("die", true);
