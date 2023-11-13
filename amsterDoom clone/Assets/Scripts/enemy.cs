@@ -32,14 +32,19 @@ public class enemy : MonoBehaviour
 
         if (Hp <= 0)
         {
+            dead = true;
             anim.SetBool("die", true);
         }
     }
 
     public void TakeDamage(float damage)
     {
-        anim.SetTrigger("hit");
-        Hp -= damage;
+        if (!dead)
+        {
+            anim.SetTrigger("hit");
+            Hp -= damage;
+        }
+        
     }
 
     public void die()

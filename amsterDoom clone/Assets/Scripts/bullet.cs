@@ -5,9 +5,13 @@ using UnityEngine;
 
 public class bullet : MonoBehaviour
 {
+    public GameObject THIS;
     Vector3 targetPos;
     public float speed;
     public int damage;
+    public float endTime;
+    public float TTime;
+    private float TCTime;
 
     // Start is called before the first frame update
     void Start()
@@ -19,11 +23,18 @@ public class bullet : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        TCTime = TTime + TTime;
+
         transform.position = Vector3.MoveTowards(transform.position, targetPos, speed * Time.deltaTime);
 
         if(transform.position == targetPos)
         {
-            Destroy(this);
+            Destroy(THIS);
+        }
+
+        if(TTime > endTime)
+        {
+            Destroy(THIS);
         }
     }
 
